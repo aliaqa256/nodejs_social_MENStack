@@ -49,8 +49,14 @@ exports.login = async (req, res, next) => {
 	try {
 		const { error } = validateLoginUser(req.body);
 		if (error) return res.status(422).json({ message: error.message });
+		// find user that user or email is equal to req.body.username
+		const user = await UserModel.findOne( {
+			$or: [
+				{ email: req.body.username },
+				{ username: req.body.username },
+			],
 
-		let user = await UserModel.findOne({ username: req.body.username });
+		} );
 		if (!user)
 			return res
 				.status(400)
