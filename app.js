@@ -8,17 +8,18 @@ const cors = require( 'cors' );
 const dotEnv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const winston = require( "winston" );
 //------------------------------------------------------------
 const api = require("./routes/api");
 const UserModel = require("./models/User");
 const connectDB = require("./db");
 const { role_enum } = require("./utils/role_enum");
-
+require("express-async-errors");
+const ErrorMiddleware = require("./middlewares/Error");
 //* express setting
 const app = express();
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true ,parameterLimit:50000}));
-
 // //* Load Config
 dotEnv.config({ path: "./config.env" });
 const JWP = process.env.JWP;
@@ -49,7 +50,7 @@ app.use((req, res, next) => {
 // //*api routes
 app.use("/api", api);
 
-
+app.use(ErrorMiddleware);
 
 // //* 404
 app.use((req, res) => {
