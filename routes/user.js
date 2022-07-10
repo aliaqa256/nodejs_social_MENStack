@@ -7,6 +7,7 @@ const Auth = require("../middlewares/auth");
 const vip = require("../middlewares/vip");
 const superuser = require("../middlewares/super");
 
+/////multer
 var storage = multer.diskStorage({
 	destination: function (req, file, cb) {
 		cb(null, "public/uploads/");
@@ -41,6 +42,7 @@ var upload = multer({
 	},
 });
 
+
 //*checktoken
 router.get("/check", usercontroler.check);
 
@@ -48,7 +50,7 @@ router.post("/register", usercontroler.register);
 router.post("/login", usercontroler.login);
 //* auth
 router.post("/passwd", Auth, usercontroler.changepassword);
-router.put("/photo", Auth, upload.single("userphoto"), usercontroler.addphoto);
+router.post("/photo", Auth, upload.single("photo"), usercontroler.addphoto);
 
 //*superuser
 router.post("/add", Auth, superuser, usercontroler.adduser);

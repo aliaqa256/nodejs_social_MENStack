@@ -1,5 +1,6 @@
 const _ = require("lodash");
-const bcrypt = require("bcryptjs");
+const bcrypt = require( "bcryptjs" );
+const fs = require("fs");
 //-------------------------------------------------
 const UserModel = require("../models/User");
 const {
@@ -12,7 +13,6 @@ const {
 
 exports.register = async (req, res, next) => {
 	try {
-		console.log(req.body);
 		const { error } = validateCreateUser(req.body);
 		if (error) return res.status(422).json({ message: error.message });
 
@@ -20,8 +20,8 @@ exports.register = async (req, res, next) => {
 		if (user)
 			return res.status(400).json({ message: "کاربری با این ایمیل وجود دارد" });
 
-		let checkuser = await UserModel.findOne({ username: req.body.username });
-		if (checkuser)
+		let checkUserName = await UserModel.findOne({ username: req.body.username });
+		if (checkUserName)
 			return res
 				.status(400)
 				.json({ message: "کاربری با این یوزرنیم وجود دارد" });
@@ -30,6 +30,12 @@ exports.register = async (req, res, next) => {
 		const salt = await bcrypt.genSalt(10);
 		user.password = await bcrypt.hash(user.password, salt);
 		user = await user.save();
+		const token = user.generateAuthToken();
+		res
+			.header("Access-Control-Expose-headers", "x-auth-token")
+			.header("x-auth-token", token)
+			.status(201)
+			.json(user);
 	} catch (err) {
 		if (!err.statusCode) {
 			err.statusCode = 500;
@@ -37,12 +43,6 @@ exports.register = async (req, res, next) => {
 		next(err);
 	}
 
-	const token = user.generateAuthToken();
-	res
-		.header("Access-Control-Expose-headers", "x-auth-token")
-		.header("x-auth-token", token)
-		.status(200)
-		.json(user);
 };
 
 exports.login = async (req, res, next) => {
@@ -106,7 +106,7 @@ exports.adduser = async (req, res, next) => {
 		res
 			.header("Access-Control-Expose-headers", "x-auth-token")
 			.header("x-auth-token", token)
-			.status(200)
+			.status(201)
 			.json(user);
 	} catch (err) {
 		if (!err.statusCode) {
@@ -120,7 +120,7 @@ exports.deleteuser = async (req, res, next) => {
 	try {
 		const id = req.params.id;
 		const result = await UserModel.findByIdAndRemove(id);
-		res.status(200).json({ res: true });
+		res.status(204).json({ res: true });
 	} catch (err) {
 		if (!err.statusCode) {
 			err.statusCode = 500;
@@ -174,10 +174,14 @@ exports.list = async (req, res, next) => {
 	}
 };
 
-exports.addphoto = async (req, res, next) => {
+exports.addphoto = async ( req, res, next ) =>
+{
+
+	
 	try {
 		const model = await UserModel.findById(req.user._id);
-		model.photo = (await "uploads/") + req.file.filename;
+		model.photo = await "uploads/" + req.file.filename;
+		
 		res.status(200).json(model.photo);
 	} catch (err) {
 		if (!err.statusCode) {
